@@ -15,20 +15,17 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 # Parameters
-EXPIRY = 3600
-BATCHES = 50
+EXPIRY = 3500
+BATCHES = 100
 GET_AUDIO_FEATURE_URL = config.get('URLS', 'GET_AUDIO_FEATURE_URL')
 GET_AUTH_URL = config.get('URLS', 'GET_AUTH_URL')
 CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID")
 CLIENT_SECRET = os.environ.get("SPOTIFY_CLIENT_SECRET")
 
 
-def write_to_json(feature):
-    with open("data/audio_features.json", "w+") as file:
-        features = []
-        for song in feature:
-            features.append(song)
-        json.dump(features, file)
+def write_to_json(audio_ftr):
+    with open('data/audio_features.json', 'w+') as file:
+        json.dump(audio_ftr, file)
 
 
 def get_authorization_token():
@@ -50,7 +47,8 @@ def refresh_token():
 
 
 async def extract_audio_features(session, spotify_id, start_time, token):
-    if time.time() - start_time > 3500:
+    # Token expires every hour, we need to refresh token before it happens.
+    if time.time() - start_time > EXPIRY:
         token = get_authorization_token()
 
     headers = {"Authorization": "Bearer " + token}
@@ -67,18 +65,26 @@ async def main(songs, tags):
 
     access_token = get_authorization_token()
     async with aiohttp.ClientSession() as session:
-        for i in tqdm(range(0, len(songs), 50), desc=f"Sending spotify requests with in batches of {BATCHES}"):
+        for i in tqdm(range(0, len(songs), BATCHES), desc=f"Sending spotify requests with in batches of {BATCHES}"):
             tasks = []
             for song in songs['spotify_id'].iloc[i:i+BATCHES]:
                 task = asyncio.ensure_future(extract_audio_features(session, song, start_time, access_token))
                 tasks.append(task)
 
             audio_feature = await asyncio.gather(*tasks)
-            write_to_json(audio_feature)
+            for song in audio_feature:
+                features.append(song)
+
             # Put a sleep before sending requests again!
-            time.sleep(5)
+            time.sleep(10)
+
+    return features
 
 if __name__ == '__main__':
-    songs = pd.read_csv('data/songs.csv').sample(n=1000)
+    features = []
+    songs = pd.read_csv('data/songs.csv').sample(n=500)
     tags = pd.read_csv('data/tags.csv')
-    asyncio.run(main(songs, tags))
+
+    audio_features = asyncio.run(main(songs, tags))
+
+    write_to_json(audio_features)
