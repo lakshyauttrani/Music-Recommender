@@ -24,9 +24,15 @@ jobs:
     steps:
 
       # Runs a single command using the runners shell
-      - name: RunningSpotify
+      - name: checkout repo content
+        uses: actions/checkout@v2 # checkout the repository content to github runner.
+      - name: setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9.6 #install the python needed
+      - name: RunningSpotify # run the app.py to get the latest data
+        run: |
+          python app.py
         env:
           CID: ${{ secrets.SPOTIFY_CLIENT_ID }}
           SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
-
-        run: python ./app.py
