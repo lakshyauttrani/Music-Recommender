@@ -13,9 +13,10 @@ from spotipy.oauth2 import SpotifyClientCredentials
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
+import streamlit as st
 
-CID = os.environ.get("CID")
-SECRET = os.environ.get("SECRET")
+CID = st.secrets["API_CLIENT_ID"]
+SECRET = st.secrets["API_CLIENT_SECRET"]
 
 class Spotify_Recommender():
 
