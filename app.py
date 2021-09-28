@@ -143,6 +143,9 @@ def main():
             st.image(process_flow)
 
             st.text("")
+            st.markdown('### Project Details ([Medium article](https://medium.com/@lakshyauttrani/music-recommender-through-spotify-api-839eed9776cd))')
+
+            st.text("")
             st.markdown("### ***Here are some recommendations for you:***")
 
             n_songs = 5
